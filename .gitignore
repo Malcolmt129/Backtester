@@ -2,3 +2,4 @@ defs.py
 /.history
 __pycache__/
 /env
+BackTester.egg-info/

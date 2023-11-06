@@ -1,5 +1,6 @@
 defs.py
 /.history
 __pycache__/
-/env
+env/
 BackTester.egg-info/
+build/

@@ -192,4 +192,8 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+
+# Stuff that I added
+/'Python Codes'
 >>>>>>> 311f9ea86d87b99812c96a524bb4cce80651721e

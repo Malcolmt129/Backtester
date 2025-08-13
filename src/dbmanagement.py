@@ -1,6 +1,6 @@
 import sqlite3
 import pandas as pd
-from databaseInterface import IDatabase
+from src.databaseInterface import IDatabase
 
 class DBManager(IDatabase):
     
@@ -9,8 +9,6 @@ class DBManager(IDatabase):
         self.conn = sqlite3.connect(self.db_name) 
         self.cursor = self.conn.cursor()
     
-    def __enter__(self):
-        return self
 
 
     def __exit__(self):
@@ -64,8 +62,8 @@ class DBManager(IDatabase):
         self.conn.commit()
 
     def addCandleData(self, dataFrame: pd.DataFrame):
-    
 
+        
         # Get the stock_id from the table... This means that I need to have all of the futures
         # contracts in the database beforehand
 

@@ -8,9 +8,9 @@ class ITradingStrategy(ABC):
     def __init__(self, ibclient):
         pass
 
-
+    
     @abstractmethod
-    def collectData(self):
+    def collectData(self, symbol, start, end):
         pass
 
 

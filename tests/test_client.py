@@ -1,25 +1,32 @@
 from typing import assert_type
-from client import IBClient
+from src.client import IBClient 
+from src.dbmanagement import DBManager
+from ibapi.client import Contract
 import pandas as pd
 import pytest
 
 
+
 class TestIBClient:
 
+    
+    def test_get_futures_contracts(self):
+
+        db = DBManager()
+
+        client = IBClient("127.0.0.1", 7497, 5, db)
+        mnq = client.get_futures_contract('mnq')
+        assert_type(mnq, Contract)
+    
 
     def test_historical_data_retrieval(self):
-        client = IBClient("127.0.0.1", 7497, 5)
-        mnq = client.get_futures_contract('mnq')
-        data_mnq = client.requestHistoricalData(90, mnq, durationStr= "1 D", barSizeSetting="5 mins")
         
+        db = DBManager()
+
+        client = IBClient("127.0.0.1", 7497, 5, db)
+        mnq = client.get_futures_contract('mnq')
+        data_mnq = client.dataRequest(90, mnq, durationStr= "1 D", barSizeSetting="5 mins")
+        
+
         assert_type(data_mnq, pd.DataFrame)
         
-        assert_type(data_mnq.iloc[:, 0], str)
-        assert_type(data_mnq.iloc[:, 1], float)
-    
-    def test_acquire_futures_contracts(self):
-        client = IBClient("127.0.0.1", 7497, 5)
-        client.
-
-
-

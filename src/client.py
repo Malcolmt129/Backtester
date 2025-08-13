@@ -8,6 +8,8 @@ from ibapi.wrapper import EWrapper
 from ibapi.client import Contract
 from threading import Thread
 
+
+
 class IBClient(EWrapper, EClient):
     
     def __init__(self, host, port, client_id, dbconn: IDatabase) -> None:
@@ -28,6 +30,7 @@ class IBClient(EWrapper, EClient):
         return self.disconnect()
 
    # catch _any_ variant of error()
+    
     def error(self, reqId=None, errorCode=None, errorString=None, *args):
         """
         This will handle:
@@ -40,13 +43,13 @@ class IBClient(EWrapper, EClient):
         if args:
             print(" Extra error info:", args)
     
-
-    def _datarequest(self, reqId: int, contract: Contract,
+    
+    def dataRequest(self, reqId: int, contract: Contract,
                               end:str="", durationStr: str="1 D", barSizeSetting: str= "1 min",
                               useRTH:int=0, formatDate:int=2, 
                               keepUpToDate:bool=False) -> pd.DataFrame:
         try:
-            self.reqHistoricalData(reqId=reqId,
+            super().reqHistoricalData(reqId=reqId,
                                 contract=contract,
                                 endDateTime=end,
                                 durationStr=durationStr,
@@ -66,8 +69,8 @@ class IBClient(EWrapper, EClient):
             return pd.DataFrame(columns=["date", "open", "high", "low", "close"]).set_index("date")
 
 
-    #Historical data is some type of callback and you cant change the name or you will get nothing
-    #back
+    #Historical data is a EWrapper class function. This is called afer to request data
+    
     def historicalData(self, reqId: int, bar: BarData) -> None:
         df = self.data.setdefault(reqId, 
                                   pd.DataFrame(columns=["date", "open", "high", "low", "close",
@@ -119,6 +122,7 @@ class IBClient(EWrapper, EClient):
         contract.currency = "USD"
         return contract
     
+
     
     # Remember that this is just a request to get something back. So the member variables that you
     # see are not the only attributes of the contracts return object
@@ -142,7 +146,6 @@ class IBClient(EWrapper, EClient):
         contract.exchange = "SMART"
         contract.currency = "USD"
         return contract
-
 
 
 if __name__ == "__main__":

@@ -6,9 +6,6 @@ class IDatabase(ABC):
     @abstractmethod
     def __init__(self, db_name:str):
         pass
-    @abstractmethod
-    def __enter__(self):
-        pass
 
     @abstractmethod
     def __exit__(self):

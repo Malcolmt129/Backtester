@@ -1,6 +1,8 @@
 import sqlite3
-import pandas as pd
-from src.databaseInterface import IDatabase
+from databaseInterface import IDatabase
+import logging as log
+
+log.basicConfig(level=log.DEBUG)
 
 class DBManager(IDatabase):
     
@@ -8,7 +10,8 @@ class DBManager(IDatabase):
         self.db_name = db_name
         self.conn = sqlite3.connect(self.db_name) 
         self.cursor = self.conn.cursor()
-    
+        
+        log.debug("Connected to DB")
 
 
     def __exit__(self):
@@ -18,65 +21,56 @@ class DBManager(IDatabase):
     def close(self):
         self.conn.commit()
         self.conn.close()
+        log.debug("Database closed")
 
     
     def init_db(self):
+        
         self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS futures_contracts (
-                id_num      INTEGER PRIMARY KEY AUTOINCREMENT,
-                ticker      VARCHAR(8) UNIQUE
-            ); 
-        ''')
-
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS future_price_data (
-                id INTEGER PRIMARY KEY,
-                stock_id    INTEGER, 
-                timestamp   TEXT NOT NULL,
-                open        REAL NOT NULL, 
-                high        REAL NOT NULL,
-                low         REAL NOT NULL,
-                close       REAL NOT NULL,
-                volume      REAL NOT NULL,
-                granularity TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS daily_futures_price_data (
+                
+                ticker      TEXT,
+                timestamp   DECIMAL NOT NULL,
+                open        DECIMAL NOT NULL, 
+                high        DECIMAL NOT NULL,
+                low         DECIMAL NOT NULL,
+                close       DECIMAL NOT NULL,
+                volume      INTEGER NOT NULL
             );
         ''')
-
         self.conn.commit()
-        self._addSymbolsToDB()
+        log.debug("Created initial tables for database")
 
-    def _addSymbolsToDB(self):
-            
-        futures_symbols = [ "ES", "NQ", "GC", "ZB", "ZC", "ZS", "ZW" ] 
-        
-        try: 
-            for symbol in futures_symbols: 
-                self.cursor.execute('''
-                    INSERT OR IGNORE INTO futures_contracts (ticker) VALUES (?)
-                ''', (symbol,)) # Need to have a trailing comma, remember
-                print(f"Added {symbol} contract to database")
+    def addDailyCandleData(self, contract: str, historicalData: dict):
 
-        except Exception as e:
-                print("Error: ", e)
-
-        self.conn.commit()
-
-    def addCandleData(self, dataFrame: pd.DataFrame):
-
-        
         # Get the stock_id from the table... This means that I need to have all of the futures
         # contracts in the database beforehand
+        try:
 
-        self.cursor.execute('''
-                        INSERT INTO future_price (
+            for value in historicalData.values():
+                for candle in value:
 
-                        stock_id, timestamp, open, high, low, close, volume, granularity )
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ''', ())
-    
+                    self.cursor.execute('''
+                                    INSERT INTO daily_futures_price_data (
+
+                                    ticker, timestamp, open, high, low, close, volume)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                                    ''',(contract.upper(), candle["date"], candle["open"],
+                                        candle["high"], 
+                                        candle["low"], candle["close"], candle["volume"]))
+                    self.conn.commit()
+        
+        except Exception as e:
+            print("Error: ", e)
+            log.info("Historical data was not successfully added to database")
+                
+        log.info("Historical data added to database")
+
     def getCandleData(self, start, end):
         pass
-
+    
+    
 if __name__ == "__main__":
     db = DBManager() 
     db.init_db()
+    

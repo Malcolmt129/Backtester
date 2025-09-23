@@ -15,17 +15,16 @@ class TestIBClient:
         db = DBManager()
 
         client = IBClient("127.0.0.1", 7497, 5, db)
-        mnq = client.get_futures_contract('mnq')
+        mnq = client._get_futures_contract('mnq')
         assert_type(mnq, Contract)
     
 
-    def test_historical_data_retrieval(self):
+    def test_dataRequest(self):
         
         db = DBManager()
 
         client = IBClient("127.0.0.1", 7497, 5, db)
-        mnq = client.get_futures_contract('mnq')
-        data_mnq = client.dataRequest(90, mnq, durationStr= "1 D", barSizeSetting="5 mins")
+        data_mnq = client.dataRequest(90, 'mnq', durationStr= "1 D", barSizeSetting="5 mins")
         
 
         assert_type(data_mnq, pd.DataFrame)

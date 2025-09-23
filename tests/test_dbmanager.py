@@ -1,7 +1,8 @@
-
 import pytest
+from src.dbmanagement import DBManager
 
 class TestDBManager():
 
-    def test_add_futures_contract_to_db(self):
-        pass
+    def test_addSymbolsToDB(self):
+        db = DBManager()
+

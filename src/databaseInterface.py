@@ -16,12 +16,7 @@ class IDatabase(ABC):
         pass
 
     @abstractmethod
-    def _addSymbolsToDB(self):
-        pass
-    
-
-    @abstractmethod
-    def addCandleData(self, dataFrame: pd.DataFrame):
+    def addDailyCandleData(self, contract: str, historicalData: dict):
         pass
 
     @abstractmethod

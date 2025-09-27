@@ -2,14 +2,19 @@ import time
 from ibapi import client
 import pytz
 import pandas as pd
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from databaseInterface import IDatabase
 from ibapi.client import BarData, EClient 
 from ibapi.wrapper import EWrapper
 from ibapi.client import Contract
 from threading import Thread, Event
 import pdb
-import logging as log
+import logging 
+
+
+log = logging.getLogger(__name__)
+#logging.basicConfig(level=logging.DEBUG)
+
 
 class IBClient(EWrapper, EClient):
     
@@ -40,26 +45,26 @@ class IBClient(EWrapper, EClient):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        return self.disconnect()
-    
+        self.disconnect()
     
 
 
-    """
-        This wrapper method create the thread that connects to TWS
-    """
     def connectIB(self, host, port, client_id):
         
         """
-            The structure of this connect is based on combating the hanging thread that happens
-            often during troubleshooting and potentially while running, where the thread isn't
-            terminated gracefully. self.shutdown_flag is an Event object that we can use to
-            communicate what is going on with other threads, so while not set, go ahead and run.
-            When set (which will only happen if error 326 occurs), that means kill the thread and do
-            some clean up. 
-
+            This wrapper method creates the thread that connects to TWS
         """
+        
         def connect_thread(): 
+            """
+                The structure of this connect is based on combating the hanging thread that happens
+                often during troubleshooting and potentially while running, where the thread isn't
+                terminated gracefully. self.shutdown_flag is an Event object that we can use to
+                communicate what is going on with other threads, so while not set, go ahead and run.
+                When set (which will only happen if error 326 occurs), that means kill the thread and do
+                some clean up. 
+
+            """
             try:
                 self.connect(host,port,client_id)
 
@@ -74,13 +79,13 @@ class IBClient(EWrapper, EClient):
         
     
 
-
-    """
-        This is neccessary because requesting data before the connection is establish will cause a
-        hard to detect error (unless logging is on, which I wont have on when things start to work
-        well together)
-    """
     def wait_until_connected(self, timeout=10):
+
+        """
+            This is neccessary because requesting data before the connection is establish will cause a
+            hard to detect error (unless logging is on, which I wont have on when things start to work
+            well together)
+        """
         for _ in range(timeout * 10):
             if self.connected:
                 return True
@@ -89,20 +94,21 @@ class IBClient(EWrapper, EClient):
         raise TimeoutError("Timeout waiting for TWS to connect")
 
     
-    """
+    def nextValidId(self, orderId: int):
+        """
         Per the TWS api docs, this function (which is an override of EWrapper or EClient class
         (don't care to look which one right now) is commonly used to tell if TWS is connected or
         not.
-    """
-    def nextValidId(self, orderId: int):
+        """
         self.connected = True
         log.info("Connection to TWS established")
 
 
-    """ 
-        This is what will be called when we get error code 326.
-    """
     def cleanup(self):
+        """ 
+            This is what will be called when we get error code 326.
+        """
+
         self.shutdown_flag.set()
         self.disconnect()
         if self.thread and self.thread.is_alive():
@@ -110,15 +116,15 @@ class IBClient(EWrapper, EClient):
             log.info("Thread successfully shut down.")
 
 
-    """ 
-        This is what will be called when we get error code 326.
-    """
     def reconnect(self):
+        """ 
+            This is what will be called when we get error code 326.
+        """
         time.sleep(2)
 
 
         #clear flags
-        self.conected = False
+        self.connected = False
         self.shutdown_flag.clear()
         self.done.clear()
 
@@ -164,43 +170,79 @@ class IBClient(EWrapper, EClient):
         if code in {200, 1100, 10147}:
             raise RuntimeError(f"TWS Critical Error [{code}]: {msg}")
     
-    """
-            This function currently defaults to getting as far back data as possible per the TWS API
-            docs. This is just what we have to do for right now.
+    def dailyDataRequest(self, symbol: str, yearsback: int):
 
-            Read the docs to see what the maxes are.
-    """
-    def dailydataRequest(self, symbol: str, yearsback: int):
+        """
+        Retrieves daily candlestick data for specific futures contracts (quarterly expiries) over N years.
+        """
+        all_data = []
+        expiries = self._get_past_expiries(yearsback)
         
-        contract = self._get_futures_contract(symbol)
+        log.info("expiries have been set") 
 
-        self.done.clear()
         self.wait_until_connected()
 
-        try:
-
-            referenceTime = time
-            for i in range(yearsback):
-
-                #referenceTime
-                super().reqHistoricalData(reqId=1,
-                                    contract=contract,
-                                    endDateTime="",
-                                    durationStr="1 Y",
-                                    barSizeSetting="1 day",
-                                    whatToShow="TRADES",
-                                    useRTH=0,
-                                    formatDate=2,
-                                    keepUpToDate=False,
-                                    chartOptions=[])
-                
-                self.done.wait(timeout=15)
-            return pd.DataFrame(self.data[1])
+        for i, expiry in enumerate(expiries):
+            self.data[1] = []  # clear previous contract data
+            self.done.clear()
             
-        except KeyError  as e:
-            print(f"Error on request number: {e}") 
+            contract = self._get_futures_contract(symbol, expiry=expiry)
+            print(contract)
+            log.info(f"📦 Requesting {contract.symbol} for expiry {expiry}")
 
-    #Historical data is a EWrapper class function. This is called after you request data. You get
+            try:
+                super().reqHistoricalData(
+                    reqId=1,
+                    contract=contract,
+                    endDateTime="",
+                    durationStr="6 M", 
+                    barSizeSetting="1 day",
+                    whatToShow="TRADES",
+                    useRTH=0,
+                    formatDate=2,
+                    keepUpToDate=False,
+                    chartOptions=[]
+                )
+
+                self.done.wait(timeout=15)
+
+                if self.data[1]:
+                    df = pd.DataFrame(self.data[1])
+                    df["expiry"] = expiry  # add expiry tag
+                    all_data.append(df)
+                else:
+                    log.info(f"No data returned for {contract.symbol} expiry {expiry}")
+
+            except Exception as e:
+                print(f"Error requesting data for expiry {expiry}: {e}")
+
+            time.sleep(0.5)  # slight buffer to avoid pacing violations
+
+        if all_data:
+            result = pd.concat(all_data).drop_duplicates(subset="date").sort_values("date")
+            return result.reset_index(drop=True)
+        else:
+            log.warning("No data collected.")
+            return pd.DataFrame()
+
+
+    def _get_past_expiries(self, years=10):
+        """
+            Get the most liquid expiries strings to place as contract end dates for reqHistoricalData()
+            function.
+        """
+        expiries = []
+        today = datetime.today()
+        current_year = today.year
+        months = ["03", "06", "09", "12"]
+
+        for y in range(current_year - years, current_year + 1):
+            for m in months:
+                expiries.append(f"{y}{m}")
+        return expiries
+
+
+   #Historical data is a EWrapper class function. This is called after you request data. You get
     #bar data back and you should put into a Dataframe to be able to manipulate later
     
 
@@ -274,7 +316,7 @@ class IBClient(EWrapper, EClient):
     def _get_futures_contract(self, symbol: str, localsymbol: str = "", expiry: str = ""):
         contract = Contract()
         contract.symbol = symbol
-        contract.secType = "CONTFUT"
+        contract.secType = "FUT"
         contract.exchange = "CME"
         contract.localSymbol = localsymbol
         contract.currency = "USD"

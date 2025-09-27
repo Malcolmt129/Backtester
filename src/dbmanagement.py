@@ -1,8 +1,12 @@
 import sqlite3
 from databaseInterface import IDatabase
-import logging as log
+import logging 
 
-log.basicConfig(level=log.DEBUG)
+
+
+log = logging.getLogger(__name__)
+
+#logging.basicConfig(level=logging.DEBUG)
 
 class DBManager(IDatabase):
     
@@ -22,7 +26,6 @@ class DBManager(IDatabase):
         self.conn.commit()
         self.conn.close()
         log.debug("Database closed")
-
     
     def init_db(self):
         

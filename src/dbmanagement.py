@@ -1,5 +1,6 @@
 import sqlite3
 from databaseInterface import IDatabase
+import pandas as pd
 import logging 
 
 
@@ -32,36 +33,34 @@ class DBManager(IDatabase):
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS daily_futures_price_data (
                 
-                ticker      TEXT,
-                timestamp   DECIMAL NOT NULL,
-                open        DECIMAL NOT NULL, 
-                high        DECIMAL NOT NULL,
-                low         DECIMAL NOT NULL,
-                close       DECIMAL NOT NULL,
-                volume      INTEGER NOT NULL
+                symbol              TEXT NOT NULL,
+                timestamp           DECIMAL NOT NULL,
+                open                DECIMAL NOT NULL, 
+                high                DECIMAL NOT NULL,
+                low                 DECIMAL NOT NULL,
+                close               DECIMAL NOT NULL,
+                volume              INTEGER NOT NULL
             );
         ''')
         self.conn.commit()
         log.debug("Created initial tables for database")
 
-    def addDailyCandleData(self, contract: str, historicalData: dict):
+    def addDailyCandleData(self, contract: str, historicalData: pd.DataFrame):
 
         # Get the stock_id from the table... This means that I need to have all of the futures
         # contracts in the database beforehand
         try:
 
-            for value in historicalData.values():
-                for candle in value:
+            for index, row in historicalData.iterrows():
+                
+                self.cursor.execute('''
+                                INSERT INTO daily_futures_price_data (
 
-                    self.cursor.execute('''
-                                    INSERT INTO daily_futures_price_data (
-
-                                    ticker, timestamp, open, high, low, close, volume)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                                    ''',(contract.upper(), candle["date"], candle["open"],
-                                        candle["high"], 
-                                        candle["low"], candle["close"], candle["volume"]))
-                    self.conn.commit()
+                                symbol, timestamp, open, high, low, close, volume)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                ''',(contract, row['epoch_ts'], row["open"],
+                                    row["high"], row["low"], row["close"], row["volume"]))
+                self.conn.commit()
         
         except Exception as e:
             print("Error: ", e)

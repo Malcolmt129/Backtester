@@ -1,5 +1,6 @@
 from client import IBClient
 from dbmanagement import DBManager
+from dbento import DataBento
 import logging 
 
 
@@ -9,13 +10,13 @@ import logging
 def main():
     
     dbman = DBManager() 
-    #context management to make sure the disconnect() is ran when done
-    with  IBClient("127.0.0.1", 7497, 1, dbman) as client:
-        client.dbconn.init_db() 
-        es_data = client.dailyDataRequest("ES", 2) 
-        
-        dbman.addDailyCandleData("ES", client.data) 
+    dbentoClient = DataBento() 
 
+
+    data = dbentoClient.requestDailyFutureData("ES.c.0", "20250101", "20250131")
+
+
+    dbman.addDailyCandleData("ES.c.0", data)
 
 
 if __name__ == "__main__":

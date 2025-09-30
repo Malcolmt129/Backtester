@@ -16,7 +16,7 @@ class IDatabase(ABC):
         pass
 
     @abstractmethod
-    def addDailyCandleData(self, contract: str, historicalData: dict):
+    def addDailyCandleData(self, contract: str, historicalData: pd.DataFrame):
         pass
 
     @abstractmethod

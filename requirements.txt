@@ -10,7 +10,7 @@ contourpy==1.3.3
 databento==0.63.0
 databento-dbn==0.41.0
 frozenlist==1.7.0
-ibapi @ file:///home/malcolm/projects/Backtester/IBJts/source/pythonclient
+ibapi @ file:///home/malcolm/projects/Backtester/src/IBJts/source/pythonclient
 idna==3.10
 iniconfig==2.1.0
 Jinja2==3.1.6

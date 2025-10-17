@@ -20,5 +20,5 @@ class IDatabase(ABC):
         pass
 
     @abstractmethod
-    def getCandleData(self, start, end):
+    def getDailyCandleDataFromDB(self,symbol: str, start: str, end: str) -> pd.DataFrame:
         pass

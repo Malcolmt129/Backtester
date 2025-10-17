@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-
+from databaseInterface import IDatabase
+import pandas as pd
 
 class ITradingStrategy(ABC):
     
@@ -10,16 +11,6 @@ class ITradingStrategy(ABC):
 
     
     @abstractmethod
-    def collectData(self, symbol, start, end):
+    def collectData(self, symbol, start, end, dbclient: IDatabase) -> pd.DataFrame:
         pass
-
-
-    @abstractmethod
-    def generateSignals(self):
-        pass
-
-
-
-
-
 

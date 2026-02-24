@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-import pandas as pd
 
 class IDatabase(ABC):
-   
+    
     @abstractmethod
     def __init__(self, db_name:str):
         pass
@@ -14,11 +13,14 @@ class IDatabase(ABC):
     @abstractmethod
     def init_db(self):
         pass
-
+    
     @abstractmethod
-    def addDailyCandleData(self, contract: str, historicalData: pd.DataFrame):
+    def execQuery(self, query, params):
         pass
-
+   
+   
+    #This will be to populate the schema to be used for queries
     @abstractmethod
-    def getDailyCandleDataFromDB(self,symbol: str, start: str, end: str) -> pd.DataFrame:
+    def _getSchema():
         pass
+    

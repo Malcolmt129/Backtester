@@ -1,32 +1,25 @@
 from client import IBClient
-from dbmanagement import DBManager
+from sqliteManager import SQLiteManager
 from dbento import DataBento
-import logging
+import pandas as pd
+import bootstrap
+import signal
 
-from charter import Charter 
-
-
-#log = logging.getLogger(__name__)
-#logging.basicConfig(level=loggin.DEBUG)
 
 def main():
-    
-    dbman = DBManager() 
-    dbentoClient = DataBento() 
-    chart = Charter()
+    app = bootstrap.build_app()  
+    engine = app.engine
 
-    data = dbentoClient.requestDailyFutureData("ES", "20250101", "20250930")
-    
+    engine.run()
 
-    adjData = dbentoClient.backAdjustData(data)
+    # graceful shutdown
+    def _stop(*_):
+        engine.request_stop()
 
-    chart.showBackAdjVUnadj(data, adjData)
+    signal.signal(signal.SIGINT, _stop)
+    signal.signal(signal.SIGTERM, _stop)
 
-    #dbman.addDailyCandleData("ES", data)
-
-    #dbman.getDailyCandleDataFromDB("20250101", "20250131")
-
-
+    engine.run()                   # blocking call
 if __name__ == "__main__":
 
     main()

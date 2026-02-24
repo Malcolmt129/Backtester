@@ -1,0 +1,22 @@
+
+
+mode = "paper"
+
+
+[database]
+path = "tradingUniverse.db"
+
+# All of this is just fake for now
+[data]
+provider = "databento"
+symbols = ["ES", "NQ"]
+timeframe = "1m"
+
+[broker]
+type = "ibkr"
+account = "DU123456"
+
+[risk]
+max_position_size = 5
+max_daily_loss = 2000
+

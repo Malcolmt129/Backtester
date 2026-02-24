@@ -144,27 +144,27 @@ class IBClient(EWrapper, EClient):
             return
 
         # General log
-        print(f"⚠️  IB Error {code}: {msg} (req_id={req_id})")
+        print(f"IB Error {code}: {msg} (req_id={req_id})")
 
         # Route based on error code
         if code == 200:
-            print("🔴 No security definition found (possibly bad symbol or contract).")
+            print("No security definition found (possibly bad symbol or contract).")
         elif code == 326:
-            print("🔴 Client ID in use already... closing connection and retrying.")
+            print("Client ID in use already... closing connection and retrying.")
             
             self.cleanup()
             self.reconnect()
 
         elif code == 504:
-            print("🔴 TWS not connected.")
+            print(" TWS not connected.")
         elif code == 1101:
-            print("🟡 TWS connection restored.")
+            print(" TWS connection restored.")
         elif code == 202:
-            print("🟠 Order canceled.")
+            print("Order canceled.")
         elif code == 10147:
-            print("🔵 Order rejected by exchange. You may want to retry.")
+            print("Order rejected by exchange. You may want to retry.")
         else:
-            print("ℹ️  Unhandled error code.")
+            print(" Unhandled error code.")
 
         # Optional: raise custom exceptions
         if code in {200, 1100, 10147}:
@@ -188,7 +188,7 @@ class IBClient(EWrapper, EClient):
             
             contract = self._get_futures_contract(symbol, expiry=expiry)
             print(contract)
-            log.info(f"📦 Requesting {contract.symbol} for expiry {expiry}")
+            log.info(f" Requesting {contract.symbol} for expiry {expiry}")
 
             try:
                 super().reqHistoricalData(
@@ -243,7 +243,7 @@ class IBClient(EWrapper, EClient):
 
 
    #Historical data is a EWrapper class function. This is called after you request data. You get
-    #bar data back and you should put into a Dataframe to be able to manipulate later
+   #bar data back and you should put into a Dataframe to be able to manipulate later
     
 
     def historicalData(self, reqId: int, bar: BarData):
@@ -261,32 +261,34 @@ class IBClient(EWrapper, EClient):
             "volume": int(bar.volume),
             })
 
-    
+    """
+        @precondition: None
+
+        @postcondition: None
+
+    """    
     def historicalDataEnd(self, reqId: int, start: str, end: str):
         self.done.set()
         print(f"Historical data has been recieved for reqID {reqId}")
 
 
+    """
+        @precondition: None
+
+        @postcondition: None
+
+    """    
     def getLastLookedContract(self):
       return self.lastLookedContract
 
 
-    def _localizeTime(self, timeStamp: str):
-        tz = pytz.timezone('America/New_York')
-        # directly get a TZ-aware datetime in New York
-        dt = tz.localize(datetime.fromtimestamp(int(timeStamp)))
-        return dt
-    
-    def _localizeTime_Ymmdd(self, timeStamp: str):
-        
-        tz = pytz.timezone('America/New_York')
-        dt = datetime.strptime(timeStamp, "%Y%m%d").replace(tzinfo=tz)
-        epoch_time = dt.timestamp() 
-        return epoch_time 
-    
-    def _createDateObjFromString(self, input: str):
-        return date.fromisoformat(input)
 
+    """
+        @precondition: Client is connected
+
+        @postcondition: Return a valid contract 
+
+    """    
     def _get_stock_contract(self, symbol: str):
         contract = Contract()
         contract.symbol = symbol

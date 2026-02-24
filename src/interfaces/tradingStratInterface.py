@@ -9,8 +9,12 @@ class ITradingStrategy(ABC):
     def __init__(self, ibclient):
         pass
 
+    @abstractmethod
+    def start(self):
+        pass
     
     @abstractmethod
-    def collectData(self, symbol, start, end, dbclient: IDatabase) -> pd.DataFrame:
+    def stop(self):
         pass
+
 

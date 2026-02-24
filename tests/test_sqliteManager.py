@@ -1,11 +1,12 @@
 import pytest
-from src.dbmanagement import DBManager
+from src.sqliteManager import SQLiteManager
 import sqlite3
 import pandas as pd
-class TestDBManager():
+from ..db_sql import INSERT_INTO_DAILY_FUTURES
+class TestSQLiteManager():
 
     def test_addDailyCandleData(self):
-        db = DBManager(":memory:")
+        db = SQLiteManager(":memory:")
     
         db.cursor.execute('''
             CREATE TABLE IF NOT EXISTS daily_futures_price_data (
@@ -44,10 +45,39 @@ class TestDBManager():
         assert(len(return_df) == len(sample_data))
 
 
+    def test_execQuery(self):
+        db = SQLiteManager(":memory:")
+
+        db.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS daily_futures_price_data (
+                
+                symbol              TEXT NOT NULL,
+                timestamp           DECIMAL NOT NULL,
+                open                DECIMAL NOT NULL, 
+                high                DECIMAL NOT NULL,
+                low                 DECIMAL NOT NULL,
+                close               DECIMAL NOT NULL,
+                volume              INTEGER NOT NULL
+            );
+        ''')
+
+
+        query = INSERT_INTO_DAILY_FUTURES
+
+        sample_data = [
+                "ES", 1758412800, 100.25, 102.25, 99.5, 101.5, 99999
+                ]   
+
+        params = sample_data 
+
+
+        res = db.execQuery(query, params)
+        assert(res == True)
+        db.conn.close() #Need to close so that the in memory database is deleted
 
     def test_getDailyCandleDataFromDB(self):
 
-        db = DBManager(":memory:")
+        db = SQLiteManager(":memory:")
 
 
         db.cursor.execute('''

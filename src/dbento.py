@@ -4,16 +4,18 @@ from keys import databento_key
 import logging
 from datetime import datetime
 
+from src.messageBus import MessageBus
+
 log = logging.getLogger(__name__)
 
 class DataBento:
 
     
     
-    def __init__(self):
-
+    def __init__(self, bus:MessageBus):
+        
         self.historicalClient = db.Historical(databento_key)
-
+        self.bus = bus 
 
     def getFuturesExpSymbols(self, symbol: str, start, end):
 
@@ -81,16 +83,24 @@ class DataBento:
             
             
             data["epoch_ts"] = data["ts_event"].astype("int64") // 10**9
-            data['mid'] = (data['high'] + data['low'])/2 
             log.info(f"Request for{symbol} recieved...")
-
-            return data
+            
+            adj_data = self.backAdjustData(data)
+            return adj_data 
 
         else:
             print("Date probably doesn't exist, check start or end date")
             return pd.DataFrame()
     
+    
 
+
+    """
+        This shouldn't be in this class... This doesn't have anything to do with
+        databento itself.
+        
+        MARKED FOR REMOVAL
+    """
     def backAdjustData(self, data: pd.DataFrame):
 
         """
@@ -102,7 +112,9 @@ class DataBento:
             data(pd.DataFrame): Dataframe that gets passed in. 
 
         """
-                
+        
+
+        breakpoint()
         # Sort descending so we start from latest and walk backward
         temp_df = data.sort_values("ts_event", ascending=False).copy()
         
@@ -130,7 +142,6 @@ class DataBento:
             adjusted_row["open"] += adjustment
             adjusted_row["high"] += adjustment
             adjusted_row["low"] += adjustment
-            adjusted_row["mid"] += adjustment
             adjusted_rows.append(adjusted_row)
 
             # Update tracking
@@ -156,14 +167,13 @@ class DataBento:
     
 
         dataRange = self.historicalClient.metadata.get_dataset_range(dataset="GLBX.MDP3") 
-        print("dataRange fine")
 
         startTime = pd.Timestamp(dataRange["start"])
         endTime = pd.Timestamp(dataRange["end"])
         
         contSymbol = symbol + ".c.0"
 
-        
+        #make the request        
         data: pd.DataFrame = self.historicalClient.timeseries.get_range(
                 dataset="GLBX.MDP3",
                 symbols=contSymbol,
@@ -178,33 +188,11 @@ class DataBento:
         
         
         data["epoch_ts"] = data["ts_event"].astype("int64") // 10**9
-        print(data)
-        log.info(f"Request for{symbol} recieved...")
+        
+        #Use the back adjust function
+        adj_data = self.backAdjustData(data)
 
-        return data
-
-
-    def is_date_valid(self, date: str, fmt="%Y%m%d"):
-        """
-        This checks if the date is a valid date that exists. Like 09/31/2025 does not exist because
-        september has only 30 days
-
-        Args:
-            date(str): The date string that needs to be checked
-            fmt(str): The format of the date string 
-
-        """
-        try:
-            datetime.strptime(date, fmt)
-            return True
-
-        except ValueError:
-            return False
-
+        return adj_data
 
 if __name__ == "__main__":
-    dbe = DataBento()
-
-
-    data = pd.read_csv("dailyDataWithRollovers.csv")
-    adj_data = dbe.backAdjustData(data)
+    pass

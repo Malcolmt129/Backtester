@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "backtester"
+version = "0.1.0"
+description = "Algorithmic trading backtester"
+requires-python = ">=3.10"
+
+# You can move your requirements.txt content here eventually
+dependencies = [
+    "databento",
+    "pytest",
+    # ... etc
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+# include non-python files that live inside the package if any
+"backtester" = ["py.typed"]

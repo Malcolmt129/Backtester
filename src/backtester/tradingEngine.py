@@ -24,6 +24,7 @@ class TradingEngine:
 
         while not self._stop:
             event = self.bus.get(timeout=1.0)   # blocks
+
             if event is None:
                 continue
             self._dispatch(event)

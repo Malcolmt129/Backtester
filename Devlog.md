@@ -94,3 +94,24 @@ are using the database class, we are having functions that execute individual sq
 misuse of the class. It should just pass a valid sql query to the data base and return the results.
 Another class should have all the details of whats going on and should be tested, that we aren't repeating
 the intent of making queries to the database.
+
+## 03/17/2026
+
+So many things that I have learned again:
+
+1) First, I switched to Claude Code instead of chatGPT. But it showed me quickly that you should make a
+workplace for AI to do it's thing whle you do yours. Use it to execute ideas(poorly), then make a coherent
+implementation. 
+
+    - Don't make a different branch for it in git. Make a different working tree with git.
+    - Use a different Claude terminal for that git working tree.
+
+
+2) I decided to use dearpygui for python. Simple enough but not to basic looking UI capabilites.
+
+3) DPG works alot like a DOM, it uses a tree structure and is maintained with a stack. So use context managers 
+with a name and return that object. 
+
+4) If you want objects to be on the same horizontal plane you have to set it its horizontal to true. Also
+remember you need to set the width otherwise one object will render all the way to the end of the window
+and the other object won't render at all.

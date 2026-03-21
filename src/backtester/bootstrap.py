@@ -14,10 +14,6 @@ def build_app() -> App:
 
     bus = MessageBus()
     store = SQLiteManager(bus)
-    strategies = []
-
-    strategies = ["EMA_CrossOver"]
-    
 
     #The engine should not have to initiate with stategies already active. 
     #I should be able to add them at a later time. Lets say raise an event 

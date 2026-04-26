@@ -1,7 +1,8 @@
 import sqlite3
 
 from backtester.interfaces.databaseInterface import IDatabase
-import logging 
+from backtester.instruments import Instrument
+import logging
 from backtester.messageBus import MessageBus
 log = logging.getLogger(__name__)
 
@@ -28,17 +29,27 @@ class SQLiteManager(IDatabase):
         log.debug("Database closed")
     
     def init_db(self):
-        
+
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS daily_futures_price_data (
-                
+
                 symbol              TEXT NOT NULL,
                 timestamp           DECIMAL NOT NULL,
-                open                DECIMAL NOT NULL, 
+                open                DECIMAL NOT NULL,
                 high                DECIMAL NOT NULL,
                 low                 DECIMAL NOT NULL,
                 close               DECIMAL NOT NULL,
                 volume              INTEGER NOT NULL
+            );
+        ''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS instruments (
+                ticker                TEXT PRIMARY KEY,
+                contractType          TEXT NOT NULL,
+                minSize               INTEGER NOT NULL,
+                currentPrice          REAL NOT NULL,
+                priceVolatility       REAL NOT NULL,
+                executionCostPerBlock REAL NOT NULL
             );
         ''')
         self.conn.commit()
@@ -65,6 +76,10 @@ class SQLiteManager(IDatabase):
             print(f"Error at verifyQuery: {e}")
             return False
    
+    def load_instruments(self) -> dict[str, Instrument]:
+        self.cursor.execute("SELECT * FROM instruments")
+        return {row[0]: Instrument.from_row(row) for row in self.cursor.fetchall()}
+
     def _getSchema(self):
         tables = {}
         table_names = []

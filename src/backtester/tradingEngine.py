@@ -1,11 +1,13 @@
 from backtester.interfaces.databaseInterface import IDatabase
+from backtester.instruments import Instrument
 from backtester.messageBus import MessageBus
 
 
 class TradingEngine:
-    def __init__(self, bus: MessageBus, store:IDatabase):
+    def __init__(self, bus: MessageBus, store: IDatabase, instruments: dict[str, Instrument]):
         self.bus = bus
-        self.store = store 
+        self.store = store
+        self.instruments = instruments
         self.strategies = []
         self._stop = False
 

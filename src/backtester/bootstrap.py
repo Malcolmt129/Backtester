@@ -14,13 +14,15 @@ def build_app() -> App:
 
     bus = MessageBus()
     store = SQLiteManager(bus)
+    instruments = store.load_instruments()
 
-    #The engine should not have to initiate with stategies already active. 
-    #I should be able to add them at a later time. Lets say raise an event 
+    #The engine should not have to initiate with stategies already active.
+    #I should be able to add them at a later time. Lets say raise an event
     #where I can add one on the fly
     engine = TradingEngine(
             bus=bus,
-            store=store
+            store=store,
+            instruments=instruments
             )
 
     return App(engine=engine)

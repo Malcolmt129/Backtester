@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+
 def getRawData(): 
     raw = pd.read_csv("../tests/dailyfuturedata.csv")
     raw.info() 

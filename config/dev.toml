@@ -19,4 +19,4 @@ account = "DU123456"
 [risk]
 max_position_size = 5
 max_daily_loss = 2000
-
+cash_vol_pct = 25

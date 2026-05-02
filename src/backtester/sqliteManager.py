@@ -17,6 +17,8 @@ class SQLiteManager(IDatabase):
         self.cursor = self.conn.cursor()
         self.schema: dict[str,list[str]] = self._getSchema() 
         log.debug("Connected to DB")
+        
+        self.init_db()
 
 
     def __exit__(self):
